@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: summary-api
+    runtime: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: TRANSFORMATION_PROVIDER
+        value: openai-compatible
+      - key: TRANSFORMATION_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: TRANSFORMATION_API_KEY
+        sync: false
+      - key: TRANSFORMATION_MODEL
+        value: meta-llama/llama-3.1-8b-instruct:free
+      - key: TRANSFORMATION_TEMPERATURE
+        value: "0.2"
+      - key: TRANSFORMATION_MAX_TOKENS
+        value: "1000"
+      - key: TRANSFORMATION_TIMEOUT
+        value: "60"
