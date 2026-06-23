@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Text Transformation API is the first API service in a growing local-first API platform. It accepts text and returns transformed text. The first transformation is summarization, and the engine is designed for future prompt-controlled transformations such as podcast scripts, explainers, lectures, study guides, executive briefs, rewrites, and translations.
+The Text Transformation API is the first API service in a growing local-first API platform. It accepts text and returns transformed text. The first transformation is summarization, and the engine now includes prompt templates for podcast scripts, explainers, lectures, study guides, executive briefs, rewrites, and translations.
 
 The current milestone focuses on the API contract, Docker deployment, Render deployment, LiteLLM-backed transformation engine, and documentation. The frontend will be added later.
 
@@ -21,6 +21,8 @@ summary-api/
     api.md
     project.md
   tests/
+    test_named_transformations.py
+    test_prompts.py
     test_transformer.py
   Dockerfile
   docker-compose.yml
@@ -57,6 +59,11 @@ http://127.0.0.1:8001/redoc
 ```text
 GET  /health
 POST /v1/transformations
+POST /v1/transformations/podcast
+POST /v1/transformations/explainer
+POST /v1/transformations/lecture
+POST /v1/transformations/study-guide
+POST /v1/transformations/executive-brief
 POST /v1/summaries
 POST /v1/summaries/async
 GET  /v1/summaries/{id}
@@ -66,6 +73,18 @@ POST /v1/summaries/bulk
 ## Current Behavior
 
 The API uses LiteLLM as the text transformation engine.
+
+### Named transformations
+
+`POST /v1/transformations/podcast`, `POST /v1/transformations/explainer`, `POST /v1/transformations/lecture`, `POST /v1/transformations/study-guide`, and `POST /v1/transformations/executive-brief` use curated prompt templates.
+
+Each named transformation supports:
+
+```text
+length: short | medium | long
+format: plain | json
+tone: neutral | friendly | professional
+```
 
 ### Generic transformations
 
@@ -247,6 +266,23 @@ PORT=8000
 
 ### Ollama
 
+If Ollama is managed by systemd and the API runs in Docker, make Ollama listen on Docker-reachable interfaces:
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0:11434"
+```
+
+Restart and verify:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart ollama
+ss -ltnp | grep 11434
+```
+
+You should see `*:11434`.
+
 ```text
 TRANSFORMATION_PROVIDER=openai-compatible
 TRANSFORMATION_BASE_URL=http://host.docker.internal:11434/v1
@@ -272,6 +308,15 @@ TRANSFORMATION_API_KEY=llama-cpp
 TRANSFORMATION_MODEL=local-model-name
 ```
 
+### vLLM
+
+```text
+TRANSFORMATION_PROVIDER=openai-compatible
+TRANSFORMATION_BASE_URL=http://host.docker.internal:8000/v1
+TRANSFORMATION_API_KEY=EMPTY
+TRANSFORMATION_MODEL=meta-llama/Llama-3.1-8B-Instruct
+```
+
 ### OpenRouter
 
 ```text
@@ -281,7 +326,7 @@ TRANSFORMATION_API_KEY=your_openrouter_key
 TRANSFORMATION_MODEL=meta-llama/llama-3.1-8b-instruct:free
 ```
 
-OpenRouter has free models, but availability and limits can change. Local Ollama, LM Studio, and llama.cpp are the most reliable free options because they run on your hardware.
+OpenRouter has free models, but availability and limits can change. Local Ollama, LM Studio, llama.cpp, and vLLM are the most reliable free options because they run on your hardware.
 
 ## Authentication
 
@@ -312,7 +357,6 @@ Recommended future persistence:
 
 Likely backend additions:
 
-- Add prompt templates for podcast, explainer, lecture, study guide, executive brief, rewrite, and translation.
 - Add structured JSON output support.
 - Add provider fallback and retry behavior.
 - Add token/cost tracking for paid providers.

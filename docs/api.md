@@ -9,13 +9,6 @@ Current transformation support:
 ```text
 Summarization
 Generic prompt-controlled transformations
-Asynchronous summarization jobs
-Bulk summarization
-```
-
-Future transformation types can use the same engine:
-
-```text
 Podcast scripts
 Explainers
 Lectures
@@ -23,6 +16,14 @@ Study guides
 Executive briefs
 Rewrites
 Translations
+Asynchronous summarization jobs
+Bulk summarization
+```
+
+Future transformation types can use the same engine:
+
+```text
+
 ```
 
 ## Architecture
@@ -111,6 +112,29 @@ Start Ollama locally, then pull a model:
 ollama pull llama3.1:8b
 ```
 
+If Ollama is managed by systemd and the API runs in Docker, make Ollama listen on Docker-reachable interfaces:
+
+```bash
+sudo systemctl edit ollama
+```
+
+Add:
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0:11434"
+```
+
+Then restart:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart ollama
+ss -ltnp | grep 11434
+```
+
+You should see Ollama listening on `*:11434`, not only `127.0.0.1:11434`.
+
 Environment:
 
 ```text
@@ -144,6 +168,19 @@ TRANSFORMATION_PROVIDER=openai-compatible
 TRANSFORMATION_BASE_URL=http://host.docker.internal:8080/v1
 TRANSFORMATION_API_KEY=llama-cpp
 TRANSFORMATION_MODEL=local-model-name
+```
+
+## vLLM
+
+Start a vLLM OpenAI-compatible server.
+
+Environment:
+
+```text
+TRANSFORMATION_PROVIDER=openai-compatible
+TRANSFORMATION_BASE_URL=http://host.docker.internal:8000/v1
+TRANSFORMATION_API_KEY=EMPTY
+TRANSFORMATION_MODEL=meta-llama/Llama-3.1-8B-Instruct
 ```
 
 ## OpenRouter
@@ -191,6 +228,8 @@ Creates a prompt-controlled text transformation.
 
 Use this endpoint when the caller wants to provide the transformation instruction directly.
 
+The API automatically appends the `text` field as source text to the prompt before calling the model.
+
 This is the most flexible endpoint.
 
 #### Request
@@ -231,6 +270,246 @@ curl -X POST "http://127.0.0.1:8001/v1/transformations" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple. This endpoint returns transformed text.",
     "prompt": "Transform this text into a short podcast intro with two hosts."
+  }'
+```
+
+---
+
+## Named Transformations
+
+### `POST /v1/transformations/podcast`
+
+Creates a two-host podcast script from source text.
+
+#### Request
+
+```json
+{
+  "text": "FastAPI makes APIs simple.",
+  "options": {
+    "length": "short",
+    "format": "json",
+    "tone": "friendly"
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/podcast" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "short",
+      "format": "json",
+      "tone": "friendly"
+    }
+  }'
+```
+
+---
+
+### `POST /v1/transformations/explainer`
+
+Creates a beginner-friendly explainer from source text.
+
+#### Request
+
+```json
+{
+  "text": "FastAPI makes APIs simple.",
+  "options": {
+    "length": "medium",
+    "format": "plain",
+    "tone": "professional"
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/explainer" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "medium",
+      "format": "plain",
+      "tone": "professional"
+    }
+  }'
+```
+
+---
+
+### `POST /v1/transformations/lecture`
+
+Creates a short lecture outline from source text.
+
+#### Request
+
+```json
+{
+  "text": "FastAPI makes APIs simple.",
+  "options": {
+    "length": "long",
+    "format": "plain",
+    "tone": "professional"
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/lecture" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "long",
+      "format": "plain",
+      "tone": "professional"
+    }
+  }'
+```
+
+---
+
+### `POST /v1/transformations/study-guide`
+
+Creates a study guide with key terms, review questions, and a short quiz.
+
+#### Request
+
+```json
+{
+  "text": "FastAPI makes APIs simple.",
+  "options": {
+    "length": "medium",
+    "format": "plain",
+    "tone": "friendly"
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/study-guide" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "medium",
+      "format": "plain",
+      "tone": "friendly"
+    }
+  }'
+```
+
+---
+
+### `POST /v1/transformations/executive-brief`
+
+Creates a concise executive brief with the main point, implications, and recommended next step.
+
+#### Request
+
+```json
+{
+  "text": "FastAPI makes APIs simple.",
+  "options": {
+    "length": "short",
+    "format": "plain",
+    "tone": "professional"
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/executive-brief" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "short",
+      "format": "plain",
+      "tone": "professional"
+    }
+  }'
+```
+
+---
+
+### `POST /v1/transformations/rewrite`
+
+Creates a rewritten version of the source text with improved clarity, flow, and tone.
+
+#### Request
+
+```json
+{
+  "text": "FastAPI makes APIs simple.",
+  "options": {
+    "length": "medium",
+    "format": "plain",
+    "tone": "friendly"
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/rewrite" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "medium",
+      "format": "plain",
+      "tone": "friendly"
+    }
+  }'
+```
+
+---
+
+### `POST /v1/transformations/translation`
+
+Creates a translation of the source text preserving meaning and nuance.
+
+#### Request
+
+```json
+{
+  "text": "FastAPI makes APIs simple.",
+  "options": {
+    "length": "short",
+    "format": "plain",
+    "tone": "professional"
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/translation" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "short",
+      "format": "plain",
+      "tone": "professional"
+    }
   }'
 ```
 
@@ -558,6 +837,8 @@ Returned for unexpected server errors, including provider/model failures.
 - Async jobs are stored in memory.
 - Async jobs are lost if the service restarts.
 - The transformation engine uses LiteLLM.
+- Named prompt templates exist for podcast, explainer, lecture, study guide, and executive brief.
+- Named templates support plain and JSON output formats.
 - The default local provider is OpenAI-compatible Ollama.
 - No database is required yet.
 - The frontend is not included yet.

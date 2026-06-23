@@ -11,7 +11,7 @@ BASE_URL="http://127.0.0.1:8001"
 ## Health
 
 ```bash
-curl "$BASE_URL/health"
+curl "http://127.0.0.1:8001/health"
 ```
 
 Expected:
@@ -27,7 +27,7 @@ Expected:
 ## OpenAPI docs
 
 ```bash
-curl "$BASE_URL/openapi.json"
+curl "http://127.0.0.1:8001/openapi.json"
 ```
 
 Open interactive docs in a browser:
@@ -44,7 +44,7 @@ http://127.0.0.1:8001/redoc
 ## Custom summary transformation
 
 ```bash
-curl -X POST "$BASE_URL/v1/transformations" \
+curl -X POST "http://127.0.0.1:8001/v1/transformations" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple. This endpoint returns transformed text.",
@@ -55,7 +55,7 @@ curl -X POST "$BASE_URL/v1/transformations" \
 ## Podcast transformation
 
 ```bash
-curl -X POST "$BASE_URL/v1/transformations" \
+curl -X POST "http://127.0.0.1:8001/v1/transformations" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple. This endpoint returns transformed text.",
@@ -66,7 +66,7 @@ curl -X POST "$BASE_URL/v1/transformations" \
 ## Explainer transformation
 
 ```bash
-curl -X POST "$BASE_URL/v1/transformations" \
+curl -X POST "http://127.0.0.1:8001/v1/transformations" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple. This endpoint returns transformed text.",
@@ -77,7 +77,7 @@ curl -X POST "$BASE_URL/v1/transformations" \
 ## Lecture transformation
 
 ```bash
-curl -X POST "$BASE_URL/v1/transformations" \
+curl -X POST "http://127.0.0.1:8001/v1/transformations" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple. This endpoint returns transformed text.",
@@ -88,7 +88,7 @@ curl -X POST "$BASE_URL/v1/transformations" \
 ## Study guide transformation
 
 ```bash
-curl -X POST "$BASE_URL/v1/transformations" \
+curl -X POST "http://127.0.0.1:8001/v1/transformations" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple. This endpoint returns transformed text.",
@@ -109,12 +109,121 @@ curl -X POST "$BASE_URL/v1/transformations" \
 
 ---
 
+# Named transformations
+
+## Podcast transformation
+
+```bash
+curl -X POST "$BASE_URL/v1/transformations/podcast" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI is great. It makes APIs simple.",
+    "options": {
+      "length": "short",
+      "format": "json",
+      "tone": "friendly"
+    }
+  }'
+```
+
+## Explainer transformation
+
+```bash
+curl -X POST "$BASE_URL/v1/transformations/explainer" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI is great. It makes APIs simple.",
+    "options": {
+      "length": "medium",
+      "format": "plain",
+      "tone": "professional"
+    }
+  }'
+```
+
+## Lecture transformation
+
+```bash
+curl -X POST "$BASE_URL/v1/transformations/lecture" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI is great. It makes APIs simple.",
+    "options": {
+      "length": "long",
+      "format": "plain",
+      "tone": "professional"
+    }
+  }'
+```
+
+## Study guide transformation
+
+```bash
+curl -X POST "$BASE_URL/v1/transformations/study-guide" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI is great. It makes APIs simple.",
+    "options": {
+      "length": "medium",
+      "format": "plain",
+      "tone": "friendly"
+    }
+  }'
+```
+
+## Executive brief transformation
+
+```bash
+curl -X POST "$BASE_URL/v1/transformations/executive-brief" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI is great. It makes APIs simple.",
+    "options": {
+      "length": "short",
+      "format": "plain",
+      "tone": "professional"
+    }
+  }'
+```
+
+## Rewrite transformation
+
+```bash
+curl -X POST "$BASE_URL/v1/transformations/rewrite" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI is great. It makes APIs simple.",
+    "options": {
+      "length": "medium",
+      "format": "plain",
+      "tone": "friendly"
+    }
+  }'
+```
+
+## Translation transformation
+
+```bash
+curl -X POST "$BASE_URL/v1/transformations/translation" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI is great. It makes APIs simple.",
+    "options": {
+      "length": "short",
+      "format": "plain",
+      "tone": "professional"
+    }
+  }'
+```
+
+---
+
 # Summaries
 
 ## Short paragraph summary
 
 ```bash
-curl -X POST "$BASE_URL/v1/summaries" \
+curl -X POST "http://127.0.0.1:8001/v1/summaries" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple. This endpoint returns a summary.",
@@ -129,7 +238,7 @@ curl -X POST "$BASE_URL/v1/summaries" \
 ## Medium bullet summary
 
 ```bash
-curl -X POST "$BASE_URL/v1/summaries" \
+curl -X POST "http://127.0.0.1:8001/v1/summaries" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple. This endpoint returns a summary. It also supports async jobs and bulk summaries.",
@@ -144,7 +253,7 @@ curl -X POST "$BASE_URL/v1/summaries" \
 ## Long paragraph summary
 
 ```bash
-curl -X POST "$BASE_URL/v1/summaries" \
+curl -X POST "http://127.0.0.1:8001/v1/summaries" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple. This endpoint returns a summary. It also supports async jobs and bulk summaries. The transformation engine uses LiteLLM and can call OpenAI-compatible providers like Ollama, LM Studio, llama.cpp, LocalAI, vLLM, and OpenRouter.",
@@ -163,7 +272,7 @@ curl -X POST "$BASE_URL/v1/summaries" \
 ## Create async summary job
 
 ```bash
-curl -X POST "$BASE_URL/v1/summaries/async" \
+curl -X POST "http://127.0.0.1:8001/v1/summaries/async" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple. This endpoint returns a summary. It also supports async jobs and bulk summaries.",
@@ -190,7 +299,7 @@ Example response:
 Replace `SUMMARY_ID` with the ID returned from the previous request.
 
 ```bash
-curl "$BASE_URL/v1/summaries/SUMMARY_ID"
+curl "http://127.0.0.1:8001/v1/summaries/SUMMARY_ID"
 ```
 
 Example completed response:
@@ -211,7 +320,7 @@ Example completed response:
 # Bulk summaries
 
 ```bash
-curl -X POST "$BASE_URL/v1/summaries/bulk" \
+curl -X POST "http://127.0.0.1:8001/v1/summaries/bulk" \
   -H "Content-Type: application/json" \
   -d '{
     "items": [
@@ -284,7 +393,7 @@ http://host.docker.internal:11434/v1
 Test with:
 
 ```bash
-curl -X POST "$BASE_URL/v1/summaries" \
+curl -X POST "http://127.0.0.1:8001/v1/summaries" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple.",
@@ -316,7 +425,7 @@ docker compose up -d --build
 Test with:
 
 ```bash
-curl -X POST "$BASE_URL/v1/transformations" \
+curl -X POST "http://127.0.0.1:8001/v1/transformations" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple.",

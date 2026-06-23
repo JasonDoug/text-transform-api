@@ -5,8 +5,16 @@ from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.prompts import (
+    build_executive_brief_prompt,
+    build_explainer_prompt,
+    build_lecture_prompt,
+    build_podcast_prompt,
+    build_study_guide_prompt,
+)
 from app.schemas import (
     AsyncSummaryCreateResponse,
     AsyncSummaryRequest,
@@ -18,6 +26,7 @@ from app.schemas import (
     SummaryOptions,
     SummaryRequest,
     SummaryResponse,
+    NamedTransformationRequest,
     TransformationRequestSchema,
     TransformationResponse,
 )
@@ -27,7 +36,15 @@ from app.transformer import LiteLLMTextTransformer, TransformationRequest
 
 app = FastAPI(
     title="Text Transformation API",
-    version="0.2.0",
+    version="0.3.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 _jobs: dict[str, dict[str, Any]] = {}
@@ -116,11 +133,75 @@ async def create_transformation(request: TransformationRequestSchema) -> Transfo
     )
 
 
+@app.post("/v1/transformations/podcast", response_model=TransformationResponse)
+async def create_podcast(request: NamedTransformationRequest) -> TransformationResponse:
+    prompt = build_podcast_prompt(
+        text=request.text,
+        length=request.options.length.value,
+        output_format=request.options.format.value,
+        tone=request.options.tone.value,
+    )
+
+    return await _build_named_transformation_response("pod", request.text, prompt)
+
+
+@app.post("/v1/transformations/explainer", response_model=TransformationResponse)
+async def create_explainer(request: NamedTransformationRequest) -> TransformationResponse:
+    prompt = build_explainer_prompt(
+        text=request.text,
+        length=request.options.length.value,
+        output_format=request.options.format.value,
+        tone=request.options.tone.value,
+    )
+
+    return await _build_named_transformation_response("exp", request.text, prompt)
+
+
+@app.post("/v1/transformations/lecture", response_model=TransformationResponse)
+async def create_lecture(request: NamedTransformationRequest) -> TransformationResponse:
+    prompt = build_lecture_prompt(
+        text=request.text,
+        length=request.options.length.value,
+        output_format=request.options.format.value,
+        tone=request.options.tone.value,
+    )
+
+    return await _build_named_transformation_response("lec", request.text, prompt)
+
+
+@app.post("/v1/transformations/study-guide", response_model=TransformationResponse)
+async def create_study_guide(request: NamedTransformationRequest) -> TransformationResponse:
+    prompt = build_study_guide_prompt(
+        text=request.text,
+        length=request.options.length.value,
+        output_format=request.options.format.value,
+        tone=request.options.tone.value,
+    )
+
+    return await _build_named_transformation_response("sg", request.text, prompt)
+
+
+@app.post("/v1/transformations/executive-brief", response_model=TransformationResponse)
+async def create_executive_brief(request: NamedTransformationRequest) -> TransformationResponse:
+    prompt = build_executive_brief_prompt(
+        text=request.text,
+        length=request.options.length.value,
+        output_format=request.options.format.value,
+        tone=request.options.tone.value,
+    )
+
+    return await _build_named_transformation_response("brief", request.text, prompt)
+
+
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(_, exc: Exception):
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Unexpected server error"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Credentials": "true",
+        },
     )
 
 
@@ -164,6 +245,24 @@ async def _build_bulk_result(item_id: str, text: str, options: SummaryOptions) -
         summary=summary,
         inputCharacters=len(text),
         outputCharacters=len(summary),
+    )
+
+
+async def _build_named_transformation_response(prefix: str, text: str, prompt: str) -> TransformationResponse:
+    result = await _text_transformer.transform(
+        TransformationRequest(
+            text=text,
+            prompt=prompt,
+            include_source_text=False,
+        )
+    )
+
+    return TransformationResponse(
+        id=_new_id(prefix),
+        text=result.text,
+        inputCharacters=len(text),
+        outputCharacters=len(result.text),
+        createdAt=_now(),
     )
 
 

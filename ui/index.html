@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Transformation API - Reference UI</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>Text Transformation API</h1>
+      <p class="subtitle">Reference UI for testing and development</p>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </header>
+
+    <main class="main">
+      <div class="layout">
+        <!-- Left Panel: Configuration -->
+        <aside class="panel panel-config">
+          <section class="config-section">
+            <h2>API Configuration</h2>
+            <div class="form-group">
+              <label for="api-base-url">Base URL</label>
+              <input type="text" id="api-base-url" value="http://127.0.0.1:8001" placeholder="http://localhost:8001">
+            </div>
+            <button id="health-check" class="btn btn-secondary">Check Health</button>
+            <div id="health-status" class="health-status hidden"></div>
+          </section>
+
+          <section class="config-section">
+            <h2>Select Endpoint</h2>
+            <div class="form-group">
+              <label for="endpoint-select">Endpoint</label>
+              <select id="endpoint-select">
+                <optgroup label="Health">
+                  <option value="health">GET /health</option>
+                </optgroup>
+                <optgroup label="Named Transformations">
+                  <option value="podcast">POST /v1/transformations/podcast</option>
+                  <option value="explainer">POST /v1/transformations/explainer</option>
+                  <option value="lecture">POST /v1/transformations/lecture</option>
+                  <option value="study-guide">POST /v1/transformations/study-guide</option>
+                  <option value="executive-brief">POST /v1/transformations/executive-brief</option>
+                  <option value="rewrite">POST /v1/transformations/rewrite</option>
+                  <option value="translation">POST /v1/transformations/translation</option>
+                </optgroup>
+                <optgroup label="Generic Transformation">
+                  <option value="generic">POST /v1/transformations</option>
+                </optgroup>
+                <optgroup label="Summaries">
+                  <option value="summary">POST /v1/summaries</option>
+                  <option value="summary-async">POST /v1/summaries/async</option>
+                  <option value="summary-bulk">POST /v1/summaries/bulk</option>
+                  <option value="summary-status">GET /v1/summaries/{id}</option>
+                </optgroup>
+              </select>
+            </div>
+            <div id="endpoint-description" class="endpoint-description"></div>
+          </section>
+
+          <section class="config-section">
+            <h2>Request Parameters</h2>
+            <form id="request-form">
+              <!-- Dynamic fields rendered here -->
+            </form>
+          </section>
+
+          <section class="config-section">
+            <div class="form-actions">
+              <button type="button" id="send-request" class="btn btn-primary" disabled>Send Request</button>
+              <button type="button" id="clear-form" class="btn btn-secondary">Clear</button>
+            </div>
+          </section>
+        </aside>
+
+        <!-- Right Panel: Response -->
+        <aside class="panel panel-response">
+          <div class="response-header">
+            <h2>Response</h2>
+            <div class="response-actions">
+              <button id="copy-response" class="btn btn-icon" title="Copy response" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+              <button id="download-response" class="btn btn-icon" title="Download response" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="response-container" class="response-container">
+            <div class="response-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <p>Select an endpoint and send a request to see the response</p>
+            </div>
+          </div>
+
+          <details id="request-details" class="request-details hidden">
+            <summary>Request Details</summary>
+            <pre id="request-log"></pre>
+          </details>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>Text Transformation API Reference UI — <a href="https://github.com" target="_blank">Documentation</a></p>
+    </footer>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 A FastAPI service for prompt-controlled text transformations.
 
-The first built-in transformation is summarization, and the engine is designed for future transformation types like podcast scripts, explainers, lectures, study guides, executive briefs, rewrites, and translations.
+The first built-in transformation is summarization, and the engine includes prompt templates for podcast scripts, explainers, lectures, study guides, executive briefs, rewrites, and translations.
 
 ## What it does
 
@@ -14,6 +14,7 @@ The service uses **LiteLLM**, so it can call any OpenAI-compatible provider:
 
 ```text
 Ollama
+Ollama Cloud
 LM Studio
 llama.cpp server
 LocalAI
@@ -76,11 +77,43 @@ curl http://127.0.0.1:8001/health
 ```text
 GET  /health
 POST /v1/transformations
+POST /v1/transformations/podcast
+POST /v1/transformations/explainer
+POST /v1/transformations/lecture
+POST /v1/transformations/study-guide
+POST /v1/transformations/executive-brief
+POST /v1/transformations/rewrite
+POST /v1/transformations/translation
 POST /v1/summaries
 POST /v1/summaries/async
 GET  /v1/summaries/{id}
 POST /v1/summaries/bulk
 ```
+
+## What are prompt templates?
+
+**Named transformation endpoints** (`/v1/transformations/{podcast,explainer,lecture,study-guide,executive-brief,rewrite,translation}`) use built-in **prompt templates** — curated, tested prompts that encode best practices for each transformation type.
+
+Instead of writing prompts yourself, you just choose the transformation type and options:
+
+```json
+{
+  "text": "your source text",
+  "options": {
+    "length": "short|medium|long",
+    "format": "plain|json",
+    "tone": "neutral|friendly|professional"
+  }
+}
+```
+
+The template handles:
+- **Structure** (podcast = two hosts, study-guide = key terms + quiz)
+- **Formatting** (plain text or valid JSON)
+- **Tone adaptation** (professional vs friendly language)
+- **Length control** (concise vs detailed output)
+
+**Generic endpoint** (`POST /v1/transformations`) — provide your own prompt for full control.
 
 ## Example: generic transformation
 
@@ -90,6 +123,111 @@ curl -X POST "http://127.0.0.1:8001/v1/transformations" \
   -d '{
     "text": "FastAPI is great. It makes APIs simple.",
     "prompt": "Transform this into a short podcast intro with two hosts."
+  }'
+```
+
+## Example: podcast transformation
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/podcast" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "short",
+      "format": "json",
+      "tone": "friendly"
+    }
+  }'
+```
+
+## Example: explainer transformation
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/explainer" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "medium",
+      "format": "plain",
+      "tone": "professional"
+    }
+  }'
+```
+
+## Example: lecture transformation
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/lecture" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "long",
+      "format": "plain",
+      "tone": "professional"
+    }
+  }'
+```
+
+## Example: study-guide transformation
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/study-guide" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "medium",
+      "format": "plain",
+      "tone": "friendly"
+    }
+  }'
+```
+
+## Example: executive-brief transformation
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/executive-brief" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "short",
+      "format": "plain",
+      "tone": "professional"
+    }
+  }'
+```
+
+## Example: rewrite transformation
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/rewrite" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "medium",
+      "format": "plain",
+      "tone": "friendly"
+    }
+  }'
+```
+
+## Example: translation transformation
+
+```bash
+curl -X POST "http://127.0.0.1:8001/v1/transformations/translation" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "FastAPI makes APIs simple.",
+    "options": {
+      "length": "short",
+      "format": "plain",
+      "tone": "professional"
+    }
   }'
 ```
 
@@ -110,6 +248,12 @@ curl -X POST "http://127.0.0.1:8001/v1/summaries" \
 
 ## Provider setup
 
+Copy the example environment file before customizing provider settings:
+
+```bash
+cp .env.example .env
+```
+
 The default Docker Compose config points at local Ollama:
 
 ```text
@@ -117,6 +261,35 @@ TRANSFORMATION_PROVIDER=openai-compatible
 TRANSFORMATION_BASE_URL=http://host.docker.internal:11434/v1
 TRANSFORMATION_API_KEY=ollama
 TRANSFORMATION_MODEL=llama3.1:8b
+```
+
+### Ollama Cloud
+
+Use Ollama Cloud when you want managed Ollama for Render or another deployed API.
+
+```text
+TRANSFORMATION_PROVIDER=openai-compatible
+TRANSFORMATION_BASE_URL=https://<your-ollama-cloud-endpoint>/v1
+TRANSFORMATION_API_KEY=your_ollama_cloud_key
+TRANSFORMATION_MODEL=<your-ollama-cloud-model>
+```
+
+Recommended deployment shape:
+
+```text
+Render API service
+  -> LiteLLM
+  -> Ollama Cloud OpenAI-compatible endpoint
+```
+
+Why use Ollama Cloud:
+
+```text
+Managed Ollama
+No GPU server to operate yourself
+OpenAI-compatible API
+Good fit for LiteLLM
+Better than trying to run Ollama inside the same Render web service
 ```
 
 ### LM Studio
@@ -133,6 +306,16 @@ TRANSFORMATION_MODEL=local-model-name
 TRANSFORMATION_BASE_URL=http://host.docker.internal:8080/v1
 TRANSFORMATION_API_KEY=llama-cpp
 TRANSFORMATION_MODEL=local-model-name
+```
+
+### vLLM
+
+Start a vLLM OpenAI-compatible server.
+
+```text
+TRANSFORMATION_BASE_URL=http://host.docker.internal:8000/v1
+TRANSFORMATION_API_KEY=EMPTY
+TRANSFORMATION_MODEL=meta-llama/Llama-3.1-8B-Instruct
 ```
 
 ### OpenRouter

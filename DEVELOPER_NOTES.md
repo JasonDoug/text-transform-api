@@ -38,6 +38,11 @@ Current routes:
 ```text
 GET  /health
 POST /v1/transformations
+POST /v1/transformations/podcast
+POST /v1/transformations/explainer
+POST /v1/transformations/lecture
+POST /v1/transformations/study-guide
+POST /v1/transformations/executive-brief
 POST /v1/summaries
 POST /v1/summaries/async
 GET  /v1/summaries/{id}
@@ -74,16 +79,19 @@ Currently contains:
 
 ```text
 build_summary_prompt()
-```
-
-Future prompt builders should live here:
-
-```text
 build_podcast_prompt()
 build_explainer_prompt()
 build_lecture_prompt()
 build_study_guide_prompt()
 build_executive_brief_prompt()
+build_rewrite_prompt()
+build_translation_prompt()
+```
+
+Future prompt builders should live here:
+
+```text
+
 ```
 
 ### `app/transformer.py`
@@ -135,6 +143,11 @@ Use this for maximum flexibility.
 ### Named endpoints
 
 ```text
+POST /v1/transformations/podcast
+POST /v1/transformations/explainer
+POST /v1/transformations/lecture
+POST /v1/transformations/study-guide
+POST /v1/transformations/executive-brief
 POST /v1/summaries
 POST /v1/summaries/async
 POST /v1/summaries/bulk
@@ -267,6 +280,21 @@ http://host.docker.internal:11434/v1
 
 `host.docker.internal` is added through Compose `extra_hosts`.
 
+If Ollama only listens on `127.0.0.1`, Docker containers cannot reach it. For local Docker use, set Ollama to listen on Docker-reachable interfaces:
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0:11434"
+```
+
+Verify with:
+
+```bash
+ss -ltnp | grep 11434
+```
+
+You should see `*:11434`, not only `127.0.0.1:11434`.
+
 ### LM Studio
 
 Requires the LM Studio local server to be running.
@@ -285,6 +313,24 @@ Default example port:
 
 ```text
 8080
+```
+
+### vLLM
+
+Requires a vLLM OpenAI-compatible server.
+
+Default example port:
+
+```text
+8000
+```
+
+Typical settings:
+
+```text
+TRANSFORMATION_BASE_URL=http://host.docker.internal:8000/v1
+TRANSFORMATION_API_KEY=EMPTY
+TRANSFORMATION_MODEL=meta-llama/Llama-3.1-8B-Instruct
 ```
 
 ## Async jobs

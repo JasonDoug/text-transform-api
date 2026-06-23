@@ -16,6 +16,34 @@ class SummaryFormat(str, Enum):
     bullets = "bullets"
 
 
+class TransformationLength(str, Enum):
+    short = "short"
+    medium = "medium"
+    long = "long"
+
+
+class TransformationOutputFormat(str, Enum):
+    plain = "plain"
+    json = "json"
+
+
+class TransformationTone(str, Enum):
+    neutral = "neutral"
+    friendly = "friendly"
+    professional = "professional"
+
+
+class TransformationOptions(BaseModel):
+    length: TransformationLength = TransformationLength.medium
+    format: TransformationOutputFormat = TransformationOutputFormat.plain
+    tone: TransformationTone = TransformationTone.neutral
+
+
+class NamedTransformationRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=200000)
+    options: TransformationOptions = Field(default_factory=TransformationOptions)
+
+
 class SummaryOptions(BaseModel):
     length: SummaryLength = SummaryLength.short
     format: SummaryFormat = SummaryFormat.paragraph

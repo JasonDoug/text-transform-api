@@ -80,3 +80,34 @@ async def test_litellm_transformer_calls_openai_compatible_endpoint(monkeypatch)
     assert calls["api_key"] == "ollama"
     assert calls["messages"][0]["role"] == "system"
     assert calls["messages"][1]["role"] == "user"
+
+
+@pytest.mark.asyncio
+async def test_litellm_transformer_includes_source_text_with_custom_prompt(monkeypatch):
+    monkeypatch.setenv("TRANSFORMATION_PROVIDER", "openai-compatible")
+    monkeypatch.setenv("TRANSFORMATION_BASE_URL", "http://localhost:11434/v1")
+    monkeypatch.setenv("TRANSFORMATION_API_KEY", "ollama")
+    monkeypatch.setenv("TRANSFORMATION_MODEL", "llama3.1:8b")
+
+    calls = {}
+
+    def fake_completion(**kwargs):
+        calls.update(kwargs)
+        return FakeCompletion("Generated summary")
+
+    monkeypatch.setattr("litellm.completion", fake_completion)
+
+    transformer = LiteLLMTextTransformer(TransformationSettings.from_env())
+
+    await transformer.transform(
+        TransformationRequest(
+            text="Alpha. Beta. Gamma.",
+            prompt="Transform this into a beginner-friendly explainer.",
+        )
+    )
+
+    user_message = calls["messages"][1]["content"]
+
+    assert "Transform this into a beginner-friendly explainer." in user_message
+    assert "Source text:" in user_message
+    assert "Alpha. Beta. Gamma." in user_message

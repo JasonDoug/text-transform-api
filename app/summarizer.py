@@ -17,6 +17,7 @@ async def summarize_text(text: str, options) -> str:
         TransformationRequest(
             text=text,
             prompt=prompt,
+            include_source_text=False,
         )
     )
 

@@ -12,6 +12,7 @@ from app.settings import TransformationSettings
 class TransformationRequest:
     text: str
     prompt: str
+    include_source_text: bool = True
 
 
 @dataclass(frozen=True)
@@ -38,7 +39,7 @@ class LiteLLMTextTransformer:
                 },
                 {
                     "role": "user",
-                    "content": request.prompt,
+                    "content": self._build_user_message(request),
                 },
             ],
             temperature=self.settings.temperature,
@@ -57,3 +58,14 @@ class LiteLLMTextTransformer:
             return f"openai/{self.settings.model}"
 
         return self.settings.model
+
+    def _build_user_message(self, request: TransformationRequest) -> str:
+        if not request.include_source_text:
+            return request.prompt
+
+        return f"""{request.prompt}
+
+Source text:
+```text
+{request.text}
+```"""
