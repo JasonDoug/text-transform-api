@@ -432,3 +432,32 @@ curl -X POST "http://127.0.0.1:8001/v1/transformations" \
     "prompt": "Transform this into a one-sentence summary."
   }'
 ```
+
+---
+
+# Content Sources
+
+## Reddit Source
+
+Get the top posts from `r/python` from the past week:
+
+```bash
+curl -X GET "http://127.0.0.1:8001/v1/sources/reddit/python?sort=top&time_period=week&limit=5"
+```
+
+## Hacker News Source
+
+Get the top frontpage stories from Hacker News:
+
+```bash
+curl -X GET "http://127.0.0.1:8001/v1/sources/hackernews?type=top&limit=5"
+```
+
+## Dev.to Source
+
+Get articles with the tag `python` from Dev.to:
+
+```bash
+curl -X GET "http://127.0.0.1:8001/v1/sources/devto?tag=python&limit=5"
+```
+

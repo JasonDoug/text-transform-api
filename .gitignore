@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Unit test / coverage reports
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Temporary manual test inputs/logs
+/cicero.txt
+/ciceroimperator.txt
+/Cicero_Imperator.txt
+/Cicero Imperator.md
+/request.json
+/session-*.md
+/subreddits
+

@@ -14,6 +14,7 @@ from app.prompts import (
     build_lecture_prompt,
     build_podcast_prompt,
     build_study_guide_prompt,
+    build_youtube_short_prompt,
 )
 from app.schemas import (
     AsyncSummaryCreateResponse,
@@ -29,8 +30,13 @@ from app.schemas import (
     NamedTransformationRequest,
     TransformationRequestSchema,
     TransformationResponse,
+    RedditSort,
+    RedditTime,
+    HackerNewsType,
+    SourceItem,
 )
 from app.settings import get_transformation_settings
+from app.sources import fetch_reddit, fetch_hackernews, fetch_devto
 from app.summarizer import summarize_text
 from app.transformer import LiteLLMTextTransformer, TransformationRequest
 
@@ -193,6 +199,19 @@ async def create_executive_brief(request: NamedTransformationRequest) -> Transfo
     return await _build_named_transformation_response("brief", request.text, prompt)
 
 
+@app.post("/v1/transformations/youtube-short", response_model=TransformationResponse)
+async def create_youtube_short(request: NamedTransformationRequest) -> TransformationResponse:
+    prompt = build_youtube_short_prompt(
+        text=request.text,
+        length=request.options.length.value,
+        output_format=request.options.format.value,
+        tone=request.options.tone.value,
+    )
+
+    return await _build_named_transformation_response("yt", request.text, prompt)
+
+
+
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(_, exc: Exception):
     return JSONResponse(
@@ -272,3 +291,76 @@ def _new_id(prefix: str) -> str:
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+@app.get("/v1/sources/reddit/{subreddit}", response_model=list[SourceItem])
+async def get_reddit_posts(
+    subreddit: str,
+    sort: RedditSort = RedditSort.hot,
+    time_period: RedditTime = RedditTime.all,
+    limit: int = 10,
+) -> list[SourceItem]:
+    if limit < 1 or limit > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Limit must be between 1 and 50"
+        )
+    try:
+        return await fetch_reddit(
+            subreddit=subreddit,
+            sort=sort.value,
+            time_period=time_period.value,
+            limit=limit
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to fetch from Reddit: {str(exc)}"
+        )
+
+
+@app.get("/v1/sources/hackernews", response_model=list[SourceItem])
+async def get_hackernews_posts(
+    type: HackerNewsType = HackerNewsType.top,
+    query: str | None = None,
+    limit: int = 10,
+) -> list[SourceItem]:
+    if limit < 1 or limit > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Limit must be between 1 and 50"
+        )
+    try:
+        return await fetch_hackernews(
+            type=type.value,
+            query=query,
+            limit=limit
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to fetch from Hacker News: {str(exc)}"
+        )
+
+
+@app.get("/v1/sources/devto", response_model=list[SourceItem])
+async def get_devto_posts(
+    tag: str | None = None,
+    limit: int = 10,
+) -> list[SourceItem]:
+    if limit < 1 or limit > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Limit must be between 1 and 50"
+        )
+    try:
+        return await fetch_devto(
+            tag=tag,
+            limit=limit
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to fetch from Dev.to: {str(exc)}"
+        )
+

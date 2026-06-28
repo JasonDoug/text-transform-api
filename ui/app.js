@@ -125,6 +125,36 @@ const ENDPOINTS = {
       { key: 'id', label: 'Job ID', type: 'text', required: true },
     ],
   },
+  'source-reddit': {
+    method: 'GET',
+    path: '/v1/sources/reddit/{subreddit}',
+    description: 'Fetch top, hot, new, or rising posts from a subreddit.',
+    fields: [
+      { key: 'subreddit', label: 'Subreddit', type: 'text', required: true, default: 'python' },
+      { key: 'sort', label: 'Sort By', type: 'select', options: ['best', 'top', 'hot', 'new', 'rising'], default: 'hot' },
+      { key: 'time_period', label: 'Time Period (top sort only)', type: 'select', options: ['all', 'year', 'month', 'week', 'day'], default: 'all' },
+      { key: 'limit', label: 'Limit (1-50)', type: 'number', default: 10 },
+    ],
+  },
+  'source-hackernews': {
+    method: 'GET',
+    path: '/v1/sources/hackernews',
+    description: 'Fetch frontpage or new posts from Hacker News.',
+    fields: [
+      { key: 'type', label: 'Type', type: 'select', options: ['top', 'new'], default: 'top' },
+      { key: 'query', label: 'Search Query (optional)', type: 'text' },
+      { key: 'limit', label: 'Limit (1-50)', type: 'number', default: 10 },
+    ],
+  },
+  'source-devto': {
+    method: 'GET',
+    path: '/v1/sources/devto',
+    description: 'Fetch articles from Dev.to.',
+    fields: [
+      { key: 'tag', label: 'Tag (optional)', type: 'text', placeholder: 'e.g. python' },
+      { key: 'limit', label: 'Limit (1-50)', type: 'number', default: 10 },
+    ],
+  },
 }
 
 const DESCRIPTIONS = {
@@ -140,6 +170,9 @@ const DESCRIPTIONS = {
   'summary-async': 'Submits a summarization job to run asynchronously. Use the returned job ID to poll for results.',
   'summary-bulk': 'Summarizes multiple texts in a single request. Provide a JSON array of strings.',
   'summary-status': 'Checks the status of an async summarization job. Returns status, progress, and result when complete.',
+  'source-reddit': 'Fetches posts from a subreddit using RSS-to-JSON.',
+  'source-hackernews': 'Fetches top or new stories from Hacker News using the Algolia API.',
+  'source-devto': 'Fetches popular articles from Dev.to.',
 }
 
 /* ---------- DOM refs ---------- */
@@ -258,6 +291,16 @@ async function sendRequest() {
   showSpinner()
 
   let url = `${STATE.baseUrl}${ep.path}`
+  const bodyCopy = { ...body }
+
+  // Interpolate path parameters (e.g. {subreddit})
+  for (const key of Object.keys(bodyCopy)) {
+    if (url.includes(`{${key}}`)) {
+      url = url.replace(`{${key}}`, encodeURIComponent(bodyCopy[key]))
+      delete bodyCopy[key]
+    }
+  }
+
   if (STATE.currentEndpoint === 'summary-status') {
     url = `${STATE.baseUrl}/v1/summaries/${body.id}`
   }
@@ -267,12 +310,22 @@ async function sendRequest() {
     headers: { 'Content-Type': 'application/json' },
   }
 
-  if (ep.method === 'POST') {
-    const sendBody = { ...body }
-    if (STATE.currentEndpoint === 'health') delete sendBody.text
-    if (STATE.currentEndpoint === 'summary-status') delete sendBody.id
+  if (ep.method === 'GET') {
+    const params = new URLSearchParams()
+    for (const [key, val] of Object.entries(bodyCopy)) {
+      if (val !== undefined && val !== null && val !== '') {
+        params.append(key, val)
+      }
+    }
+    const qs = params.toString()
+    if (qs) {
+      url += `?${qs}`
+    }
+  } else if (ep.method === 'POST') {
+    if (STATE.currentEndpoint === 'health') delete bodyCopy.text
+    if (STATE.currentEndpoint === 'summary-status') delete bodyCopy.id
     if (ep.fields.length > 0) {
-      options.body = JSON.stringify(sendBody)
+      options.body = JSON.stringify(bodyCopy)
     }
   }
 

@@ -119,3 +119,38 @@ class TransformationResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
+
+
+class RedditSort(str, Enum):
+    best = "best"
+    top = "top"
+    hot = "hot"
+    new = "new"
+    rising = "rising"
+
+
+class RedditTime(str, Enum):
+    all = "all"
+    year = "year"
+    month = "month"
+    week = "week"
+    day = "day"
+
+
+class HackerNewsType(str, Enum):
+    top = "top"
+    new = "new"
+
+
+class SourceItem(BaseModel):
+    id: str
+    title: str
+    body: str | None = None
+    author: str
+    url: str
+    score: int | None = None
+    numComments: int | None = None
+    createdAt: datetime
+    subreddit: str | None = None
+    source: str
+

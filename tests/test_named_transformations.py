@@ -83,3 +83,37 @@ def test_named_explainer_endpoint_uses_explainer_prompt(monkeypatch):
     assert response.json()["id"].startswith("exp_")
     assert "beginner-friendly explainer" in calls["messages"][1]["content"]
     assert "professional" in calls["messages"][1]["content"]
+
+
+def test_named_youtube_short_endpoint_uses_youtube_short_prompt(monkeypatch):
+    monkeypatch.setenv("TRANSFORMATION_PROVIDER", "openai-compatible")
+    monkeypatch.setenv("TRANSFORMATION_BASE_URL", "http://localhost:11434/v1")
+    monkeypatch.setenv("TRANSFORMATION_API_KEY", "ollama")
+    monkeypatch.setenv("TRANSFORMATION_MODEL", "llama3.1:8b")
+
+    calls = {}
+
+    def fake_completion(**kwargs):
+        calls.update(kwargs)
+        return FakeCompletion("Here is the YouTube Short script.")
+
+    monkeypatch.setattr("litellm.completion", fake_completion)
+
+    client = TestClient(app)
+    response = client.post(
+        "/v1/transformations/youtube-short",
+        json={
+            "text": "FastAPI makes APIs simple.",
+            "options": {
+                "length": "medium",
+                "format": "plain",
+                "tone": "professional",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"].startswith("yt_")
+    assert "YouTube Short script" in calls["messages"][1]["content"]
+    assert "professional" in calls["messages"][1]["content"]
+

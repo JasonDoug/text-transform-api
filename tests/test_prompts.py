@@ -6,6 +6,7 @@ from app.prompts import (
     build_rewrite_prompt,
     build_study_guide_prompt,
     build_translation_prompt,
+    build_youtube_short_prompt,
 )
 
 
@@ -122,3 +123,21 @@ def test_build_translation_prompt_includes_options_and_source_text():
     assert "translation" in prompt
     assert "Preserve the original meaning and nuance" in prompt
     assert "FastAPI makes APIs simple." in prompt
+
+
+def test_build_youtube_short_prompt_includes_options_and_source_text():
+    prompt = build_youtube_short_prompt(
+        text="FastAPI makes APIs simple.",
+        length="medium",
+        output_format="plain",
+        tone="professional",
+    )
+
+    assert "Transformation type: YouTube Short script" in prompt
+    assert "YouTube Short length: medium" in prompt
+    assert "Output format: plain" in prompt
+    assert "Tone: professional" in prompt
+    assert "high-retention script" in prompt
+    assert "strong, curiosity-inducing hook" in prompt
+    assert "FastAPI makes APIs simple." in prompt
+

@@ -154,6 +154,26 @@ def build_translation_prompt(text: str, length: str, output_format: str, tone: s
     )
 
 
+def build_youtube_short_prompt(text: str, length: str, output_format: str, tone: str) -> str:
+    return _build_named_prompt(
+        transformation_type="YouTube Short script",
+        label="YouTube Short length",
+        text=text,
+        length=length,
+        output_format=output_format,
+        tone=tone,
+        purpose="Transform the provided text into an engaging, high-retention script for a vertical YouTube Short or TikTok video.",
+        instructions=[
+            "Start with a strong, curiosity-inducing hook in the first 3 seconds.",
+            "Deliver information quickly with high pacing and concise sentences.",
+            "Include visual cues in brackets, e.g. [Show close-up of phone], to guide editing.",
+            "End with a loop hook or a clear call to action (like 'subscribe' or 'comment below').",
+            "Do not invent details that are not in the source text.",
+        ],
+    )
+
+
+
 def _build_named_prompt(
     transformation_type: str,
     label: str,

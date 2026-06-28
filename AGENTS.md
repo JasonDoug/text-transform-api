@@ -12,6 +12,10 @@ docker compose up -d --build
 
 # Health check
 curl http://127.0.0.1:8001/health
+
+# Start reference UI (separate terminal)
+python3 -m http.server 8080 -d ui/
+# Then open http://127.0.0.1:8080
 ```
 
 ## Run Tests
